@@ -236,21 +236,41 @@ abstract struct MySql::Type
 
     def self.read(packet)
       pkt = packet.read_byte!
-      return ::Time.new(0, 0, 0, location: MySql::TIME_ZONE) if pkt < 1
+      {% if compare_versions(Crystal::VERSION, "0.28.0-0") >= 0 %}
+        return ::Time.local(0, 0, 0, location: MySql::TIME_ZONE) if pkt < 1
+      {% else %}
+        return ::Time.new(0, 0, 0, location: MySql::TIME_ZONE) if pkt < 1
+      {% end %}
       year = packet.read_fixed_int(2).to_i32
       month = packet.read_byte!.to_i32
       day = packet.read_byte!.to_i32
-      return ::Time.new(year, month, day, location: MySql::TIME_ZONE) if pkt < 6
+      {% if compare_versions(Crystal::VERSION, "0.28.0-0") >= 0 %}
+        return ::Time.local(year, month, day, location: MySql::TIME_ZONE) if pkt < 6
+      {% else %}
+        return ::Time.new(year, month, day, location: MySql::TIME_ZONE) if pkt < 6
+      {% end %}
       hour = packet.read_byte!.to_i32
       minute = packet.read_byte!.to_i32
       second = packet.read_byte!.to_i32
-      return ::Time.new(year, month, day, hour, minute, second, location: MySql::TIME_ZONE) if pkt < 8
+      {% if compare_versions(Crystal::VERSION, "0.28.0-0") >= 0 %}
+        return ::Time.local(year, month, day, hour, minute, second, location: MySql::TIME_ZONE) if pkt < 8
+      {% else %}
+        return ::Time.new(year, month, day, hour, minute, second, location: MySql::TIME_ZONE) if pkt < 8
+      {% end %}
       ns = packet.read_int.to_i32 * 1000
-      return ::Time.new(year, month, day, hour, minute, second, nanosecond: ns, location: MySql::TIME_ZONE)
+      {% if compare_versions(Crystal::VERSION, "0.28.0-0") >= 0 %}
+        return ::Time.local(year, month, day, hour, minute, second, nanosecond: ns, location: MySql::TIME_ZONE)
+      {% else %}
+        return ::Time.new(year, month, day, hour, minute, second, nanosecond: ns, location: MySql::TIME_ZONE)
+      {% end %}
     end
 
     def self.parse(str : ::String)
-      return ::Time.new(0, 0, 0, location: MySql::TIME_ZONE) if str.starts_with?("0000-00-00")
+      {% if compare_versions(Crystal::VERSION, "0.28.0-0") >= 0 %}
+        return ::Time.local(0, 0, 0, location: MySql::TIME_ZONE) if str.starts_with?("0000-00-00")
+      {% else %}
+        return ::Time.new(0, 0, 0, location: MySql::TIME_ZONE) if str.starts_with?("0000-00-00")
+      {% end %}
       begin
         begin
           ::Time.parse(str, "%F %H:%M:%S.%N", location: MySql::TIME_ZONE)
